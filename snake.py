@@ -14,8 +14,8 @@ with open('traceback template.txt', 'w+') as f:
     try:
         # CONSTANTS:
         # Window and Game Variables:
-        WIDTH = 300
-        HEIGHT = 300
+        WIDTH = 310
+        HEIGHT = 310
         FPS = 3
 
         # COLORS:
@@ -29,36 +29,54 @@ with open('traceback template.txt', 'w+') as f:
         MAGENTA = (255, 0, 255)
 
         # ADDITIONAL VARIABLES
+        size = 10
 
         # GROUPS AND ARRAYS
         all_sprites = pygame.sprite.Group()
+        
 
         # CLASSES
+
 
         class Snake(pygame.sprite.Sprite):
             def __init__(self):
                 super().__init__()
 
-                self.size = 10
+                self.size = size
+                self.x_tile = round((WIDTH/self.size)/2)
+                self.y_tile = round((HEIGHT/self.size)/2)
+
+                print(self.x_tile, self.y_tile)
 
                 self.image = pygame.Surface((self.size,self.size))
                 self.image.fill(WHITE)
-                self.rect = self.image.get_rect(center = (WIDTH/2, HEIGHT/2))
+                self.rect = self.image.get_rect(topleft = (self.size*self.x_tile, self.size*self.y_tile))
 
                 self.snake_length = 0
-                self.current_direction = pygame.K_LEFT
+                self.current_direction = pygame.K_RIGHT
 
             def update(self):
                 match self.current_direction:
                     case pygame.K_UP:
-                        self.rect.centery -= self.size
+                        self.y_tile -= 1
                     case pygame.K_DOWN:
-                        self.rect.centery += self.size
+                        self.y_tile += 1
                     case pygame.K_LEFT:
-                        self.rect.centerx -= self.size
+                        self.x_tile -= 1
                     case pygame.K_RIGHT:
-                        self.rect.centerx += self.size
-                
+                        self.x_tile += 1
+
+                self.rect.topleft = (self.x_tile*self.size, self.y_tile*self.size)
+        
+        class Target(pygame.sprite.Sprite):
+            def __init__(self, coord):
+                super().__init__()
+
+                self.size = size
+
+                self.image = pygame.Surface((self.size,self.size))
+                self.image.fill(WHITE)
+                self.rect = self.image.get_rect(topleft = coord)
 
         # FUNCTIONS
         # General Game Functions:
@@ -67,10 +85,17 @@ with open('traceback template.txt', 'w+') as f:
             all_sprites.draw(window)
             pygame.display.update()
 
+        def NewTarget():
+            target_x = random.randint(0,WIDTH/size)*size
+            target_y = random.randint(0,HEIGHT/size)*size
+            target = Target((target_x, target_y))
+            all_sprites.add(target)
+
         # INITIALIZATION
         pygame.init()
         player = Snake()
         all_sprites.add(player)
+        NewTarget()
 
         # Create window and define cclock
         window = pygame.display.set_mode((WIDTH, HEIGHT))
