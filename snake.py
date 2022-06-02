@@ -16,7 +16,7 @@ with open('traceback template.txt', 'w+') as f:
         # Window and Game Variables:
         WIDTH = 180
         HEIGHT = 180
-        FPS = 3
+        FPS = 30
 
         # COLORS:
         BLACK = (0, 0, 0)
@@ -33,6 +33,7 @@ with open('traceback template.txt', 'w+') as f:
         sprite_size = grid_size - 2
         max_x_tile = (WIDTH/grid_size) - 1
         max_y_tile = (HEIGHT/grid_size) - 1
+        initial_speed = FPS/2
 
         # GROUPS AND ARRAYS
         all_sprites = pygame.sprite.Group()
@@ -45,8 +46,8 @@ with open('traceback template.txt', 'w+') as f:
                 super().__init__()
 
                 self.size = sprite_size
-                self.timer_max = FPS
-                self.timer_current = 0
+                self.timer_max = initial_speed
+                self.timer_current = self.timer_max
 
                 self.x_tile = round((WIDTH/grid_size)/2)
                 self.y_tile = round((HEIGHT/grid_size)/2)
@@ -64,31 +65,36 @@ with open('traceback template.txt', 'w+') as f:
                 self.prev_x_tile = self.x_tile
                 self.prev_y_tile = self.y_tile
 
-                match self.current_direction:
-                    case pygame.K_UP:
-                        self.y_tile -= 1
-                    case pygame.K_DOWN:
-                        self.y_tile += 1
-                    case pygame.K_LEFT:
-                        self.x_tile -= 1
-                    case pygame.K_RIGHT:
-                        self.x_tile += 1
+                if self.timer_current <= 0:
+                    match self.current_direction:
+                        case pygame.K_UP:
+                            self.y_tile -= 1
+                        case pygame.K_DOWN:
+                            self.y_tile += 1
+                        case pygame.K_LEFT:
+                            self.x_tile -= 1
+                        case pygame.K_RIGHT:
+                            self.x_tile += 1
 
-                if self.x_tile < 0 or self.x_tile > max_x_tile or self.y_tile < 0 or self.y_tile > max_y_tile:
-                    ResetGame()
-
-                target_collisions = pygame.sprite.spritecollide(self, all_targets, True)
-
-                for collision in target_collisions:
-                    self.add_follower()
-                    NewTarget()
-
-                follower_collisions = pygame.sprite.spritecollide(self, all_followers, False)
-                for collision in follower_collisions:
-                    if collision != all_followers.sprites()[0]:
+                    if self.x_tile < 0 or self.x_tile > max_x_tile or self.y_tile < 0 or self.y_tile > max_y_tile:
                         ResetGame()
 
-                self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
+                    target_collisions = pygame.sprite.spritecollide(self, all_targets, True)
+
+                    for collision in target_collisions:
+                        self.add_follower()
+                        NewTarget()
+
+                    self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
+                    self.timer_current = self.timer_max
+                    
+                    follower_collisions = pygame.sprite.spritecollide(self, all_followers, False)
+                    for collision in follower_collisions:
+                        if collision != all_followers.sprites()[0]:
+                            ResetGame()
+
+                else:
+                    self.timer_current -= 1
             
             def add_follower(self):
                 follower_list = all_followers.sprites()
@@ -99,6 +105,8 @@ with open('traceback template.txt', 'w+') as f:
                     follower = Follower(follower_list[-1])
 
                 self.snake_length += 1
+                if self.timer_max >= 3:
+                    self.timer_max = int(self.timer_max*0.9)
 
                 all_followers.add(follower)
                 all_sprites.add(follower)
@@ -120,13 +128,14 @@ with open('traceback template.txt', 'w+') as f:
                 self.rect = self.image.get_rect(topleft = ((grid_size*self.x_tile)+1, (grid_size*self.y_tile)+1))
 
             def update(self):
-                self.prev_x_tile = self.x_tile
-                self.prev_y_tile = self.y_tile
+                if player.timer_current == player.timer_max:
+                    self.prev_x_tile = self.x_tile
+                    self.prev_y_tile = self.y_tile
 
-                self.x_tile = self.leader.prev_x_tile
-                self.y_tile = self.leader.prev_y_tile
+                    self.x_tile = self.leader.prev_x_tile
+                    self.y_tile = self.leader.prev_y_tile
 
-                self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
+                    self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
                 
 
         class Target(pygame.sprite.Sprite):
@@ -175,6 +184,8 @@ with open('traceback template.txt', 'w+') as f:
             all_followers.empty()
             player.x_tile = round((WIDTH/grid_size)/2)
             player.y_tile = round((HEIGHT/grid_size)/2)
+            player.timer_max = initial_speed
+            player.timer_current = player.timer_max
             player.snake_length = 0
             all_sprites.add(player)
             NewTarget()
@@ -212,16 +223,16 @@ with open('traceback template.txt', 'w+') as f:
                             case pygame.K_SPACE:
                                 paused = not paused
                             case pygame.K_UP:
-                                if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT:
+                                #if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT:
                                     player.current_direction = event.key
                             case pygame.K_DOWN:
-                                if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT:
+                                #if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT:
                                     player.current_direction = event.key
                             case pygame.K_RIGHT:
-                                if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN:
+                                #if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN:
                                     player.current_direction = event.key
                             case pygame.K_LEFT:
-                                if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN:
+                                #if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN:
                                     player.current_direction = event.key
 
             # While not paused, run simulation
