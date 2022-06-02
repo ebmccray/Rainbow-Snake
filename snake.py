@@ -1,5 +1,5 @@
 # GAME INFORMATION
-title = 'Snake'
+title = 'Rainbow Snake'
 version = '1.0'
 creator = 'Erienne McCray'
 copyright = '2022'
@@ -14,26 +14,31 @@ with open('traceback template.txt', 'w+') as f:
     try:
         # CONSTANTS:
         # Window and Game Variables:
-        WIDTH = 180
-        HEIGHT = 180
+        WIDTH = 450
+        HEIGHT = 450
         FPS = 30
 
         # COLORS:
         BLACK = (0, 0, 0)
         WHITE = (255, 255, 255)
-        RED = (255, 0, 0)
-        GREEN = (0, 255, 0)
-        BLUE = (0, 0, 255)
-        YELLOW = (255, 255, 0)
-        CYAN = (0, 255, 255)
-        MAGENTA = (255, 0, 255)
+        RED = (204,0,0)
+        ORANGE = (230,145,56)
+        YELLOW = (255,217,102)
+        GREEN = (106,168,79)
+        BLUE = (61,133,198)
+        INDIGO = (103,78,167)
+        PINK = (242,78,175)
+
+
+        pride_array = [RED, ORANGE, YELLOW, GREEN, BLUE, INDIGO, PINK]
 
         # ADDITIONAL VARIABLES
-        grid_size = 12
+        grid_size = 30
         sprite_size = grid_size - 2
         max_x_tile = (WIDTH/grid_size) - 1
         max_y_tile = (HEIGHT/grid_size) - 1
         initial_speed = FPS/2
+        pride_colors = True
 
         # GROUPS AND ARRAYS
         all_sprites = pygame.sprite.Group()
@@ -55,7 +60,10 @@ with open('traceback template.txt', 'w+') as f:
                 self.prev_y_tile = self.y_tile
 
                 self.image = pygame.Surface((self.size,self.size))
-                self.image.fill(WHITE)
+                if pride_colors:
+                    self.image.fill(pride_array[0])
+                else:
+                    self.image.fill(WHITE)
                 self.rect = self.image.get_rect(topleft = ((grid_size*self.x_tile)+1, (grid_size*self.y_tile)+1))
 
                 self.snake_length = 0
@@ -79,33 +87,36 @@ with open('traceback template.txt', 'w+') as f:
                     if self.x_tile < 0 or self.x_tile > max_x_tile or self.y_tile < 0 or self.y_tile > max_y_tile:
                         ResetGame()
 
-                    target_collisions = pygame.sprite.spritecollide(self, all_targets, True)
+                    self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
 
+                    self.timer_current = self.timer_max
+
+                    target_collisions = pygame.sprite.spritecollide(self, all_targets, True)
                     for collision in target_collisions:
                         self.add_follower()
                         NewTarget()
-
-                    self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
-                    self.timer_current = self.timer_max
                     
                     follower_collisions = pygame.sprite.spritecollide(self, all_followers, False)
                     for collision in follower_collisions:
                         if collision != all_followers.sprites()[0]:
                             ResetGame()
 
+                    for follower in all_followers.sprites():
+                        follower.move()
+
                 else:
                     self.timer_current -= 1
             
             def add_follower(self):
                 follower_list = all_followers.sprites()
-
-                if self.snake_length < 1:
-                    follower = Follower(self)
-                else:
-                    follower = Follower(follower_list[-1])
-
                 self.snake_length += 1
-                if self.timer_max >= 3:
+
+                if self.snake_length <= 1:
+                    follower = Follower(self, pride_array[self.snake_length%len(pride_array)])
+                else:
+                    follower = Follower(follower_list[-1], pride_array[self.snake_length%len(pride_array)])
+
+                if self.timer_max >= FPS/10:
                     self.timer_max = int(self.timer_max*0.9)
 
                 all_followers.add(follower)
@@ -113,7 +124,7 @@ with open('traceback template.txt', 'w+') as f:
 
                 
         class Follower(pygame.sprite.Sprite):
-            def __init__(self, leader):
+            def __init__(self, leader, color):
                 super().__init__()
                 self.size = sprite_size
                 self.leader = leader
@@ -124,11 +135,14 @@ with open('traceback template.txt', 'w+') as f:
                 self.prev_y_tile = self.y_tile
 
                 self.image = pygame.Surface((self.size,self.size))
-                self.image.fill(WHITE)
+                if pride_colors:
+                    self.image.fill(color)
+                else:
+                    self.image.fill(WHITE)
                 self.rect = self.image.get_rect(topleft = ((grid_size*self.x_tile)+1, (grid_size*self.y_tile)+1))
 
-            def update(self):
-                if player.timer_current == player.timer_max:
+            def move(self):
+                #if player.timer_current == player.timer_max:
                     self.prev_x_tile = self.x_tile
                     self.prev_y_tile = self.y_tile
 
