@@ -237,16 +237,16 @@ with open('traceback template.txt', 'w+') as f:
                             case pygame.K_SPACE:
                                 paused = not paused
                             case pygame.K_UP:
-                                #if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT:
+                                if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
                                     player.current_direction = event.key
                             case pygame.K_DOWN:
-                                #if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT:
+                                if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
                                     player.current_direction = event.key
                             case pygame.K_RIGHT:
-                                #if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN:
+                                if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN or player.snake_length == 0:
                                     player.current_direction = event.key
                             case pygame.K_LEFT:
-                                #if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN:
+                                if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN or player.snake_length == 0:
                                     player.current_direction = event.key
 
             # While not paused, run simulation
