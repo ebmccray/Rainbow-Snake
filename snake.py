@@ -30,6 +30,8 @@ with open('traceback template.txt', 'w+') as f:
 
         # ADDITIONAL VARIABLES
         size = 10
+        max_x_tile = (WIDTH/size) - 1
+        max_y_tile = (HEIGHT/size) - 1
 
         # GROUPS AND ARRAYS
         all_sprites = pygame.sprite.Group()
@@ -66,6 +68,9 @@ with open('traceback template.txt', 'w+') as f:
                     case pygame.K_RIGHT:
                         self.x_tile += 1
 
+                if self.x_tile < 0 or self.x_tile > max_x_tile or self.y_tile < 0 or self.y_tile > max_y_tile:
+                    ResetGame()
+
                 self.rect.topleft = (self.x_tile*self.size, self.y_tile*self.size)
         
         class Target(pygame.sprite.Sprite):
@@ -86,16 +91,23 @@ with open('traceback template.txt', 'w+') as f:
             pygame.display.update()
 
         def NewTarget():
-            target_x = random.randint(0,WIDTH/size)*size
-            target_y = random.randint(0,HEIGHT/size)*size
+            target_x = random.randint(0,max_x_tile)*size
+            target_y = random.randint(0,max_y_tile)*size
             target = Target((target_x, target_y))
             all_sprites.add(target)
 
+        def ResetGame():
+            all_sprites.empty()
+            player.x_tile = round((WIDTH/size)/2)
+            player.y_tile = round((HEIGHT/size)/2)
+            all_sprites.add(player)
+            NewTarget()
+
         # INITIALIZATION
+
         pygame.init()
         player = Snake()
-        all_sprites.add(player)
-        NewTarget()
+        ResetGame()
 
         # Create window and define cclock
         window = pygame.display.set_mode((WIDTH, HEIGHT))
