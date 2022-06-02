@@ -74,11 +74,16 @@ with open('traceback template.txt', 'w+') as f:
                 if self.x_tile < 0 or self.x_tile > max_x_tile or self.y_tile < 0 or self.y_tile > max_y_tile:
                     ResetGame()
 
-                collisions = pygame.sprite.spritecollide(self, all_targets, True)
+                target_collisions = pygame.sprite.spritecollide(self, all_targets, True)
 
-                for collision in collisions:
+                for collision in target_collisions:
                     self.add_follower()
                     NewTarget()
+
+                follower_collisions = pygame.sprite.spritecollide(self, all_followers, False)
+                for collision in follower_collisions:
+                    if collision != all_followers.sprites()[0]:
+                        ResetGame()
 
                 self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
             
