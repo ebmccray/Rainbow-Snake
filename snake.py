@@ -114,7 +114,7 @@ with open('traceback template.txt', 'w+') as f:
 
                 self.image = pygame.Surface((self.size,self.size))
                 self.image.fill(WHITE)
-                self.rect = self.image.get_rect(topleft = (grid_size*self.x_tile, grid_size*self.y_tile))
+                self.rect = self.image.get_rect(topleft = ((grid_size*self.x_tile)+1, (grid_size*self.y_tile)+1))
 
             def update(self):
                 self.prev_x_tile = self.x_tile
@@ -136,6 +136,24 @@ with open('traceback template.txt', 'w+') as f:
                 self.image.fill(WHITE)
                 self.rect = self.image.get_rect(topleft = coord)
 
+        class TempTarget(pygame.sprite.Sprite):
+            def __init__(self, coord):
+                super().__init__()
+
+                self.size = sprite_size-2
+
+                self.image = pygame.Surface((self.size,self.size))
+                self.image.fill(BLACK)
+                self.rect = self.image.get_rect(topleft = coord)
+
+                collisions = pygame.sprite.spritecollide(self, all_followers, False)
+                if len(collisions) == 0:
+                    target = Target(self.rect.topleft)
+                    all_sprites.add(target)
+                    all_targets.add(target)
+                else:
+                    NewTarget()
+
         # FUNCTIONS
         # General Game Functions:
         def DrawGame():
@@ -146,9 +164,7 @@ with open('traceback template.txt', 'w+') as f:
         def NewTarget():
             target_x = (random.randint(0,max_x_tile)*grid_size)+2
             target_y = (random.randint(0,max_y_tile)*grid_size)+2
-            target = Target((target_x, target_y))
-            all_sprites.add(target)
-            all_targets.add(target)
+            target = TempTarget((target_x, target_y))
 
         def ResetGame():
             all_sprites.empty()
