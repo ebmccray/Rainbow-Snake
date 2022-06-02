@@ -45,6 +45,9 @@ with open('traceback template.txt', 'w+') as f:
                 super().__init__()
 
                 self.size = sprite_size
+                self.timer_max = FPS
+                self.timer_current = 0
+
                 self.x_tile = round((WIDTH/grid_size)/2)
                 self.y_tile = round((HEIGHT/grid_size)/2)
                 self.prev_x_tile = self.x_tile
@@ -209,13 +212,17 @@ with open('traceback template.txt', 'w+') as f:
                             case pygame.K_SPACE:
                                 paused = not paused
                             case pygame.K_UP:
-                                player.current_direction = event.key
+                                if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT:
+                                    player.current_direction = event.key
                             case pygame.K_DOWN:
-                                player.current_direction = event.key
+                                if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT:
+                                    player.current_direction = event.key
                             case pygame.K_RIGHT:
-                                player.current_direction = event.key
+                                if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN:
+                                    player.current_direction = event.key
                             case pygame.K_LEFT:
-                                player.current_direction = event.key
+                                if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN:
+                                    player.current_direction = event.key
 
             # While not paused, run simulation
             if not paused:
