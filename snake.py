@@ -5,13 +5,11 @@ creator = 'Erienne McCray'
 copyright = '2022'
 
 # IMPORT MODULES:
-from ast import Add
-from ctypes import alignment
 import pygame
 import pygame_menu
-from pygame_menu.widgets.core.selection import Selection
 import random
 import traceback
+import os
 
 with open('traceback template.txt', 'w+') as f:
 
@@ -219,6 +217,7 @@ with open('traceback template.txt', 'w+') as f:
 
             player.x_tile = round((WIDTH/grid_size)/2)
             player.y_tile = round((HEIGHT/grid_size)/2)
+            player.rect.topleft = ((player.x_tile*grid_size)+1, (player.y_tile*grid_size)+1)
             player.timer_max = initial_speed
             player.timer_current = player.timer_max
             player.paused = False
@@ -230,6 +229,11 @@ with open('traceback template.txt', 'w+') as f:
 
         def AddHighScore(name_box, score):
             name = name_box.get_value()
+            
+            scores_file = open("highscores.txt","a")
+            scores_file.write("%s,%s\n"%(name, score))
+            scores_file.close()
+            
             DisplayHighScores()
             
 
@@ -238,19 +242,32 @@ with open('traceback template.txt', 'w+') as f:
 
             try:
                 scores_file = open("highscores.txt")
+                scores_array = [x for x in scores_file]
+                scores_file.close()
             except:
-                menu.mainloop()
+                scores_array = ["No scores to display"]
 
-            scores_array = [x for x in scores_file]
+            sort = lambda x : x.split(",")[1]
+
+            scores_array.sort(key = sort, reverse = True)
 
             high_score_display = pygame_menu.Menu('High Scores', WIDTH, HEIGHT, theme = pygame_menu.themes.THEME_DARK)
-            
-            #scores_frame = high_score_display.add.frame_h(WIDTH, HEIGHT-200, max_width = WIDTH-1)
+            delete_scores_menu = pygame_menu.Menu('Edit High Scores', WIDTH, HEIGHT, theme = pygame_menu.themes.THEME_DARK)
 
-            scores_frame = high_score_display.add.frame_v(WIDTH-50, int(HEIGHT*0.7), max_height = int(HEIGHT/2))
+            #scores_frame = high_score_display.add.frame_v(WIDTH-50, (HEIGHT/2)+2, max_height = int(HEIGHT/2))
+
+            top_choice_frame = high_score_display.add.frame_h(WIDTH-50, 60)
+            top_choice_frame.pack(
+                high_score_display.add.button("Edit Scores", delete_scores_menu),
+                align=pygame_menu.locals.ALIGN_LEFT
+            )
+            top_choice_frame.pack(
+                high_score_display.add.button("Main Menu", menu.mainloop, window),
+                align=pygame_menu.locals.ALIGN_RIGHT
+            )
 
             titles_frame = high_score_display.add.frame_h(WIDTH-100, 60)
-            scores_frame.pack(titles_frame)
+            #scores_frame.pack(titles_frame)
 
             titles_frame.pack(
                 high_score_display.add.label("Username", font_color = PINK,),
@@ -263,9 +280,12 @@ with open('traceback template.txt', 'w+') as f:
 
             for id, entry in enumerate(scores_array):
                 user = entry.split(",")[0]
-                score = entry.split(",")[1]
+                try:
+                    score = entry.split(",")[1]
+                except:
+                    score = ""
                 entry_frame = high_score_display.add.frame_h(WIDTH-100, entry_height)
-                scores_frame.pack(entry_frame)
+                #scores_frame.pack(entry_frame)
                 entry_frame.pack(
                     high_score_display.add.label(user, font_size = 20, font_color = pride_array[id%len(pride_array)]),
                     align=pygame_menu.locals.ALIGN_LEFT
@@ -275,7 +295,7 @@ with open('traceback template.txt', 'w+') as f:
                     align=pygame_menu.locals.ALIGN_RIGHT
                 )
                 
-            choice_frame = high_score_display.add.frame_h(WIDTH-50, 100)
+            '''choice_frame = high_score_display.add.frame_h(WIDTH-50, 100)
             choice_frame.pack(
                 high_score_display.add.button("Edit Scores"),
                 align=pygame_menu.locals.ALIGN_LEFT
@@ -283,7 +303,7 @@ with open('traceback template.txt', 'w+') as f:
             choice_frame.pack(
                 high_score_display.add.button("Main Menu", menu.mainloop, window),
                 align=pygame_menu.locals.ALIGN_RIGHT
-            )
+            )'''
 
             high_score_display.mainloop(window)
            
@@ -319,7 +339,6 @@ with open('traceback template.txt', 'w+') as f:
 
         pygame.init()
         player = Snake()
-        ResetGame()
 
         # Create window and define cclock
         window = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -328,10 +347,10 @@ with open('traceback template.txt', 'w+') as f:
 
         # GAME LOOP
         def PlayGame():
+            ResetGame()
+
             running = True
             paused = False
-
-            ResetGame()
 
             while running:
                 # Set FPS
