@@ -339,7 +339,7 @@ with open('traceback template.txt', 'w+') as f:
             hs_menu.add.label("Your score is: %s"%score, max_char=-1, font_color = colors_array[0%len(colors_array)])
             hs_menu.add.label("Would you like to record your high score?", max_char=-1, font_color = colors_array[1%len(colors_array)])
             hs_menu.add.button("Yes", add_score_menu, font_color = colors_array[2%len(colors_array)])
-            hs_menu.add.button("No", PlayGame, font_color = colors_array[3%len(colors_array)])
+            hs_menu.add.button("No", menu, font_color = colors_array[3%len(colors_array)])
             hs_menu.add.button("Quit", pygame_menu.events.EXIT, font_color = colors_array[4%len(colors_array)])
 
             
@@ -421,7 +421,7 @@ with open('traceback template.txt', 'w+') as f:
         menu.add.button('Play', PlayGame, font_color = colors_array[0%len(colors_array)])
         menu.add.button('High Scores', DisplayHighScores, font_color = colors_array[1%len(colors_array)])
         menu.add.button('Help', font_color = colors_array[2%len(colors_array)])
-        # menu.add.button('Settings', settings_menu, font_color = colors_array[3%len(colors_array)])
+        menu.add.button('Settings', font_color = colors_array[3%len(colors_array)])
         menu.add.button('About', font_color = colors_array[4%len(colors_array)])
         menu.add.button('Quit', pygame_menu.events.EXIT, font_color = colors_array[5%len(colors_array)])
 
