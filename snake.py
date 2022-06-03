@@ -5,7 +5,11 @@ creator = 'Erienne McCray'
 copyright = '2022'
 
 # IMPORT MODULES:
+from ast import Add
+from ctypes import alignment
 import pygame
+import pygame_menu
+from pygame_menu.widgets.core.selection import Selection
 import random
 import traceback
 
@@ -39,20 +43,30 @@ with open('traceback template.txt', 'w+') as f:
         max_y_tile = (HEIGHT/grid_size) - 1
         initial_speed = FPS/2
         pride_colors = True
+        rainbow_theme = pygame_menu.themes.THEME_DARK
+        rainbow_theme.title_font_color = BLUE
+        rainbow_theme.widget_font_color = GREEN
+
+        rainbow_transparent = rainbow_theme
+        rainbow_transparent.set_background_color_opacity(0.5)
 
         # GROUPS AND ARRAYS
         all_sprites = pygame.sprite.Group()
         all_targets = pygame.sprite.Group()
         all_followers = pygame.sprite.Group()
 
+
         # CLASSES
         class Snake(pygame.sprite.Sprite):
             def __init__(self):
                 super().__init__()
 
+                self.name = "Player"
+
                 self.size = sprite_size
                 self.timer_max = initial_speed
                 self.timer_current = self.timer_max
+                self.paused = False
 
                 self.x_tile = round((WIDTH/grid_size)/2)
                 self.y_tile = round((HEIGHT/grid_size)/2)
@@ -73,39 +87,45 @@ with open('traceback template.txt', 'w+') as f:
                 self.prev_x_tile = self.x_tile
                 self.prev_y_tile = self.y_tile
 
-                if self.timer_current <= 0:
-                    match self.current_direction:
-                        case pygame.K_UP:
-                            self.y_tile -= 1
-                        case pygame.K_DOWN:
-                            self.y_tile += 1
-                        case pygame.K_LEFT:
-                            self.x_tile -= 1
-                        case pygame.K_RIGHT:
-                            self.x_tile += 1
+                if self.paused:
+                    pass
 
-                    if self.x_tile < 0 or self.x_tile > max_x_tile or self.y_tile < 0 or self.y_tile > max_y_tile:
-                        ResetGame()
+                else: 
+                    if self.timer_current <= 0:
+                        match self.current_direction:
+                            case pygame.K_UP:
+                                self.y_tile -= 1
+                            case pygame.K_DOWN:
+                                self.y_tile += 1
+                            case pygame.K_LEFT:
+                                self.x_tile -= 1
+                            case pygame.K_RIGHT:
+                                self.x_tile += 1
 
-                    self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
+                        if self.x_tile < 0 or self.x_tile > max_x_tile or self.y_tile < 0 or self.y_tile > max_y_tile:
+                            self.paused = True
+                            GameOver(self)
 
-                    self.timer_current = self.timer_max
+                        self.rect.topleft = ((self.x_tile*grid_size)+1, (self.y_tile*grid_size)+1)
 
-                    target_collisions = pygame.sprite.spritecollide(self, all_targets, True)
-                    for collision in target_collisions:
-                        self.add_follower()
-                        NewTarget()
-                    
-                    follower_collisions = pygame.sprite.spritecollide(self, all_followers, False)
-                    for collision in follower_collisions:
-                        if collision != all_followers.sprites()[0]:
-                            ResetGame()
+                        self.timer_current = self.timer_max
 
-                    for follower in all_followers.sprites():
-                        follower.move()
+                        target_collisions = pygame.sprite.spritecollide(self, all_targets, True)
+                        for collision in target_collisions:
+                            self.add_follower()
+                            NewTarget()
+                        
+                        follower_collisions = pygame.sprite.spritecollide(self, all_followers, False)
+                        for collision in follower_collisions:
+                            if collision != all_followers.sprites()[0]:
+                                self.paused = True
+                                GameOver(self)
 
-                else:
-                    self.timer_current -= 1
+                        for follower in all_followers.sprites():
+                            follower.move()
+
+                    else:
+                        self.timer_current -= 1
             
             def add_follower(self):
                 follower_list = all_followers.sprites()
@@ -196,13 +216,104 @@ with open('traceback template.txt', 'w+') as f:
             all_sprites.empty()
             all_targets.empty()
             all_followers.empty()
+
             player.x_tile = round((WIDTH/grid_size)/2)
             player.y_tile = round((HEIGHT/grid_size)/2)
             player.timer_max = initial_speed
             player.timer_current = player.timer_max
+            player.paused = False
             player.snake_length = 0
+
             all_sprites.add(player)
+
             NewTarget()
+
+        def AddHighScore(name_box, score):
+            name = name_box.get_value()
+            DisplayHighScores()
+            
+
+        def DisplayHighScores():
+            entry_height = 43
+
+            try:
+                scores_file = open("highscores.txt")
+            except:
+                menu.mainloop()
+
+            scores_array = [x for x in scores_file]
+
+            high_score_display = pygame_menu.Menu('High Scores', WIDTH, HEIGHT, theme = pygame_menu.themes.THEME_DARK)
+            
+            #scores_frame = high_score_display.add.frame_h(WIDTH, HEIGHT-200, max_width = WIDTH-1)
+
+            scores_frame = high_score_display.add.frame_v(WIDTH-50, int(HEIGHT*0.7), max_height = int(HEIGHT/2))
+
+            titles_frame = high_score_display.add.frame_h(WIDTH-100, 60)
+            scores_frame.pack(titles_frame)
+
+            titles_frame.pack(
+                high_score_display.add.label("Username", font_color = PINK,),
+                align = pygame_menu.locals.ALIGN_LEFT,
+            )
+            titles_frame.pack(
+                high_score_display.add.label("Score", font_color = PINK,),
+                align = pygame_menu.locals.ALIGN_RIGHT,
+            )
+
+            for id, entry in enumerate(scores_array):
+                user = entry.split(",")[0]
+                score = entry.split(",")[1]
+                entry_frame = high_score_display.add.frame_h(WIDTH-100, entry_height)
+                scores_frame.pack(entry_frame)
+                entry_frame.pack(
+                    high_score_display.add.label(user, font_size = 20, font_color = pride_array[id%len(pride_array)]),
+                    align=pygame_menu.locals.ALIGN_LEFT
+                )
+                entry_frame.pack(
+                    high_score_display.add.label(score, font_size = 20, font_color = pride_array[id%len(pride_array)]),
+                    align=pygame_menu.locals.ALIGN_RIGHT
+                )
+                
+            choice_frame = high_score_display.add.frame_h(WIDTH-50, 100)
+            choice_frame.pack(
+                high_score_display.add.button("Edit Scores"),
+                align=pygame_menu.locals.ALIGN_LEFT
+            )
+            choice_frame.pack(
+                high_score_display.add.button("Main Menu", menu.mainloop, window),
+                align=pygame_menu.locals.ALIGN_RIGHT
+            )
+
+            high_score_display.mainloop(window)
+           
+
+        def GameOver(player):
+            hs_menu = pygame_menu.Menu('Game Over', WIDTH, HEIGHT, theme = rainbow_transparent, overflow=False)
+            add_score_menu = pygame_menu.Menu('', WIDTH, HEIGHT, theme = rainbow_transparent, overflow=False)
+            score = player.snake_length*10
+
+            hs_menu.add.label("Your score is: %s"%score, max_char=-1, font_color = RED)
+            hs_menu.add.label("Would you like to record your high score?", max_char=-1, font_color = BLUE)
+            hs_menu.add.button("Yes", add_score_menu)
+            hs_menu.add.button("No", PlayGame)
+            hs_menu.add.button("Quit", pygame_menu.events.EXIT)
+
+            
+            name_box = add_score_menu.add.text_input("Username: ", default=player.name)
+            add_score_menu.add.label("Score: %s"%score)
+            choice_frame = add_score_menu.add.frame_h(WIDTH, HEIGHT/2)
+            choice_frame.pack(
+                add_score_menu.add.button("Okay", AddHighScore, name_box, score),
+                align=pygame_menu.locals.ALIGN_LEFT, margin=(2, 2)
+            )
+            choice_frame.pack(
+                add_score_menu.add.button("Cancel", pygame_menu.events.BACK),
+                align=pygame_menu.locals.ALIGN_RIGHT, margin=(2, 2)
+            )
+
+            hs_menu.mainloop(window)
+
 
         # INITIALIZATION
 
@@ -215,48 +326,57 @@ with open('traceback template.txt', 'w+') as f:
         pygame.display.set_caption(title + "-" + version)
         clock = pygame.time.Clock()
 
-        # SIM LOOP
-        running = True
-        paused = False
+        # GAME LOOP
+        def PlayGame():
+            running = True
+            paused = False
 
-        # Set-up before game runs
+            ResetGame()
 
-        while running:
-            # Set FPS
-            clock.tick(FPS)
+            while running:
+                # Set FPS
+                clock.tick(FPS)
 
-            # Check for user input
-            for event in pygame.event.get():
-                match event.type:
-                    case pygame.QUIT:
-                        running = False
-                    case pygame.KEYDOWN:
-                        match event.key:
-                            case pygame.K_RETURN:
-                                pass
-                            case pygame.K_SPACE:
-                                paused = not paused
-                            case pygame.K_UP:
-                                if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
-                                    player.current_direction = event.key
-                            case pygame.K_DOWN:
-                                if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
-                                    player.current_direction = event.key
-                            case pygame.K_RIGHT:
-                                if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN or player.snake_length == 0:
-                                    player.current_direction = event.key
-                            case pygame.K_LEFT:
-                                if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN or player.snake_length == 0:
-                                    player.current_direction = event.key
+                # Check for user input
+                for event in pygame.event.get():
+                    match event.type:
+                        case pygame.QUIT:
+                            running = False
+                        case pygame.KEYDOWN:
+                            match event.key:
+                                case pygame.K_SPACE:
+                                    paused = not paused
+                                case pygame.K_UP:
+                                    if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
+                                        player.current_direction = event.key
+                                case pygame.K_DOWN:
+                                    if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
+                                        player.current_direction = event.key
+                                case pygame.K_RIGHT:
+                                    if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN or player.snake_length == 0:
+                                        player.current_direction = event.key
+                                case pygame.K_LEFT:
+                                    if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN or player.snake_length == 0:
+                                        player.current_direction = event.key
 
-            # While not paused, run simulation
-            if not paused:
-                all_sprites.update()
+                # While not paused, run simulation
+                if not paused:
+                    all_sprites.update()
 
-        
-            DrawGame()
+            
+                DrawGame()
 
-        pygame.QUIT
+            pygame.QUIT
+
+
+        # MENU CONFIGURATION
+        menu = pygame_menu.Menu('Rainbow Snake', WIDTH, HEIGHT, theme = rainbow_theme)
+        menu.add.button('Play', PlayGame)
+        menu.add.button('High Scores', DisplayHighScores)
+        menu.add.button('Quit', pygame_menu.events.EXIT)
+
+
+        menu.mainloop(window)
 
     except:
         traceback.print_exc(file=f)
