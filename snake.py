@@ -27,12 +27,20 @@ with open('traceback template.txt', 'w+') as f:
         ORANGE = (230,145,56)
         YELLOW = (255,217,102)
         GREEN = (106,168,79)
+        LIGHT_BLUE = (3,194,252)
         BLUE = (61,133,198)
         INDIGO = (103,78,167)
         PINK = (242,78,175)
 
+        monochrome_array = [WHITE]
+        rainbow_array = [RED, ORANGE, YELLOW, GREEN, BLUE, INDIGO, PINK]
+        trans_array = [LIGHT_BLUE, PINK, WHITE, PINK]
 
-        pride_array = [RED, ORANGE, YELLOW, GREEN, BLUE, INDIGO, PINK]
+        color_choice_list = [
+            ("Classic Rainbow", rainbow_array),
+            ("Trans Flag", trans_array),
+            ("Monochrome", monochrome_array),
+            ]
 
         # ADDITIONAL VARIABLES
         grid_size = 30
@@ -40,13 +48,12 @@ with open('traceback template.txt', 'w+') as f:
         max_x_tile = (WIDTH/grid_size) - 1
         max_y_tile = (HEIGHT/grid_size) - 1
         initial_speed = FPS/2
-        pride_colors = True
-        rainbow_theme = pygame_menu.themes.THEME_DARK
-        rainbow_theme.title_font_color = BLUE
-        rainbow_theme.widget_font_color = GREEN
+        rainbow_theme = pygame_menu.themes.THEME_DARK.copy()
 
-        rainbow_transparent = rainbow_theme
+        rainbow_transparent = rainbow_theme.copy()
         rainbow_transparent.set_background_color_opacity(0.5)
+
+        colors_array = rainbow_array
 
         # GROUPS AND ARRAYS
         all_sprites = pygame.sprite.Group()
@@ -72,10 +79,7 @@ with open('traceback template.txt', 'w+') as f:
                 self.prev_y_tile = self.y_tile
 
                 self.image = pygame.Surface((self.size,self.size))
-                if pride_colors:
-                    self.image.fill(pride_array[0])
-                else:
-                    self.image.fill(WHITE)
+                self.image.fill(colors_array[0])
                 self.rect = self.image.get_rect(topleft = ((grid_size*self.x_tile)+1, (grid_size*self.y_tile)+1))
 
                 self.snake_length = 0
@@ -130,9 +134,9 @@ with open('traceback template.txt', 'w+') as f:
                 self.snake_length += 1
 
                 if self.snake_length <= 1:
-                    follower = Follower(self, pride_array[self.snake_length%len(pride_array)])
+                    follower = Follower(self, colors_array[self.snake_length%len(colors_array)])
                 else:
-                    follower = Follower(follower_list[-1], pride_array[self.snake_length%len(pride_array)])
+                    follower = Follower(follower_list[-1], colors_array[self.snake_length%len(colors_array)])
 
                 if self.timer_max >= FPS/10:
                     self.timer_max = int(self.timer_max*0.9)
@@ -151,12 +155,9 @@ with open('traceback template.txt', 'w+') as f:
                 self.y_tile = self.leader.y_tile
                 self.prev_x_tile = self.x_tile
                 self.prev_y_tile = self.y_tile
-
                 self.image = pygame.Surface((self.size,self.size))
-                if pride_colors:
-                    self.image.fill(color)
-                else:
-                    self.image.fill(WHITE)
+
+                self.image.fill(color)
                 self.rect = self.image.get_rect(topleft = ((grid_size*self.x_tile)+1, (grid_size*self.y_tile)+1))
 
             def move(self):
@@ -205,6 +206,11 @@ with open('traceback template.txt', 'w+') as f:
             all_sprites.draw(window)
             pygame.display.update()
 
+        def SetColors(array, **kwargs):
+            new_colors = array[0][1]
+            global colors_array
+            colors_array = new_colors
+
         def NewTarget():
             target_x = (random.randint(0,max_x_tile)*grid_size)+2
             target_y = (random.randint(0,max_y_tile)*grid_size)+2
@@ -235,6 +241,14 @@ with open('traceback template.txt', 'w+') as f:
             scores_file.close()
             
             DisplayHighScores()
+
+        def DeleteAllScores():
+            try: 
+                os.remove("highscores.txt")
+            except: 
+                pass
+
+            menu.mainloop(window)
             
 
         def DisplayHighScores():
@@ -245,24 +259,25 @@ with open('traceback template.txt', 'w+') as f:
                 scores_array = [x for x in scores_file]
                 scores_file.close()
             except:
-                scores_array = ["No scores to display"]
+                scores_array = ["No scores to display,"]
 
             sort = lambda x : x.split(",")[1]
 
             scores_array.sort(key = sort, reverse = True)
 
-            high_score_display = pygame_menu.Menu('High Scores', WIDTH, HEIGHT, theme = pygame_menu.themes.THEME_DARK)
-            delete_scores_menu = pygame_menu.Menu('Edit High Scores', WIDTH, HEIGHT, theme = pygame_menu.themes.THEME_DARK)
+            high_score_display = pygame_menu.Menu('High Scores', WIDTH, HEIGHT, theme = rainbow_theme)
+            edit_scores_menu = pygame_menu.Menu('Edit Scores', WIDTH, HEIGHT, theme =rainbow_theme)
+            are_you_sure = pygame_menu.Menu('Edit Scores', WIDTH, HEIGHT, theme = rainbow_theme)
 
             #scores_frame = high_score_display.add.frame_v(WIDTH-50, (HEIGHT/2)+2, max_height = int(HEIGHT/2))
 
             top_choice_frame = high_score_display.add.frame_h(WIDTH-50, 60)
             top_choice_frame.pack(
-                high_score_display.add.button("Edit Scores", delete_scores_menu),
+                high_score_display.add.button("Edit Scores", edit_scores_menu, font_color = colors_array[4%len(colors_array)]),
                 align=pygame_menu.locals.ALIGN_LEFT
             )
             top_choice_frame.pack(
-                high_score_display.add.button("Main Menu", menu.mainloop, window),
+                high_score_display.add.button("Main Menu", menu.mainloop, window, font_color = colors_array[5%len(colors_array)]),
                 align=pygame_menu.locals.ALIGN_RIGHT
             )
 
@@ -270,11 +285,11 @@ with open('traceback template.txt', 'w+') as f:
             #scores_frame.pack(titles_frame)
 
             titles_frame.pack(
-                high_score_display.add.label("Username", font_color = PINK,),
+                high_score_display.add.label("Username", font_color = colors_array[6%len(colors_array)],),
                 align = pygame_menu.locals.ALIGN_LEFT,
             )
             titles_frame.pack(
-                high_score_display.add.label("Score", font_color = PINK,),
+                high_score_display.add.label("Score", font_color = colors_array[6%len(colors_array)],),
                 align = pygame_menu.locals.ALIGN_RIGHT,
             )
 
@@ -287,11 +302,11 @@ with open('traceback template.txt', 'w+') as f:
                 entry_frame = high_score_display.add.frame_h(WIDTH-100, entry_height)
                 #scores_frame.pack(entry_frame)
                 entry_frame.pack(
-                    high_score_display.add.label(user, font_size = 20, font_color = pride_array[id%len(pride_array)]),
+                    high_score_display.add.label(user, font_size = 20, font_color = colors_array[id%len(colors_array)]),
                     align=pygame_menu.locals.ALIGN_LEFT
                 )
                 entry_frame.pack(
-                    high_score_display.add.label(score, font_size = 20, font_color = pride_array[id%len(pride_array)]),
+                    high_score_display.add.label(score, font_size = 20, font_color = colors_array[id%len(colors_array)]),
                     align=pygame_menu.locals.ALIGN_RIGHT
                 )
                 
@@ -305,6 +320,14 @@ with open('traceback template.txt', 'w+') as f:
                 align=pygame_menu.locals.ALIGN_RIGHT
             )'''
 
+            edit_scores_menu.add.button("Delete All Scores", are_you_sure, font_color = colors_array[0%len(colors_array)])
+            edit_scores_menu.add.button("Back",pygame_menu.events.BACK, font_color = colors_array[1%len(colors_array)])
+
+            are_you_sure.add.label("Are you sure you wish to delete all scores?", max_char=-1, font_color = colors_array[0%len(colors_array)])
+            are_you_sure.add.label("This action cannot be undone!", max_char=-1, font_color = colors_array[1%len(colors_array)])
+            are_you_sure.add.button("Yes", DeleteAllScores, font_color = colors_array[2%len(colors_array)])
+            are_you_sure.add.button("Back",pygame_menu.events.BACK, font_color = colors_array[3%len(colors_array)])
+
             high_score_display.mainloop(window)
            
 
@@ -313,22 +336,22 @@ with open('traceback template.txt', 'w+') as f:
             add_score_menu = pygame_menu.Menu('', WIDTH, HEIGHT, theme = rainbow_transparent, overflow=False)
             score = player.snake_length*10
 
-            hs_menu.add.label("Your score is: %s"%score, max_char=-1, font_color = RED)
-            hs_menu.add.label("Would you like to record your high score?", max_char=-1, font_color = BLUE)
-            hs_menu.add.button("Yes", add_score_menu)
-            hs_menu.add.button("No", PlayGame)
-            hs_menu.add.button("Quit", pygame_menu.events.EXIT)
+            hs_menu.add.label("Your score is: %s"%score, max_char=-1, font_color = colors_array[0%len(colors_array)])
+            hs_menu.add.label("Would you like to record your high score?", max_char=-1, font_color = colors_array[1%len(colors_array)])
+            hs_menu.add.button("Yes", add_score_menu, font_color = colors_array[2%len(colors_array)])
+            hs_menu.add.button("No", PlayGame, font_color = colors_array[3%len(colors_array)])
+            hs_menu.add.button("Quit", pygame_menu.events.EXIT, font_color = colors_array[4%len(colors_array)])
 
             
-            name_box = add_score_menu.add.text_input("Username: ", default=player.name)
-            add_score_menu.add.label("Score: %s"%score)
+            name_box = add_score_menu.add.text_input("Username: ", default=player.name, font_color = colors_array[0%len(colors_array)])
+            add_score_menu.add.label("Score: %s"%score, font_color = colors_array[1%len(colors_array)])
             choice_frame = add_score_menu.add.frame_h(WIDTH, HEIGHT/2)
             choice_frame.pack(
-                add_score_menu.add.button("Okay", AddHighScore, name_box, score),
+                add_score_menu.add.button("Okay", AddHighScore, name_box, score, font_color = colors_array[2%len(colors_array)]),
                 align=pygame_menu.locals.ALIGN_LEFT, margin=(2, 2)
             )
             choice_frame.pack(
-                add_score_menu.add.button("Cancel", pygame_menu.events.BACK),
+                add_score_menu.add.button("Cancel", pygame_menu.events.BACK, font_color = colors_array[3%len(colors_array)]),
                 align=pygame_menu.locals.ALIGN_RIGHT, margin=(2, 2)
             )
 
@@ -389,10 +412,18 @@ with open('traceback template.txt', 'w+') as f:
 
 
         # MENU CONFIGURATION
-        menu = pygame_menu.Menu('Rainbow Snake', WIDTH, HEIGHT, theme = rainbow_theme)
-        menu.add.button('Play', PlayGame)
-        menu.add.button('High Scores', DisplayHighScores)
-        menu.add.button('Quit', pygame_menu.events.EXIT)
+        settings_menu = pygame_menu.Menu('Settings', WIDTH, HEIGHT, theme = rainbow_theme,)
+        settings_menu.add.label("Demonstration purposes only", font_color = colors_array[0%len(colors_array)])
+        selector = settings_menu.add.selector("Colors:\t",items = color_choice_list, onchange=SetColors, onreturn=SetColors, font_color = colors_array[0%len(colors_array)])
+
+
+        menu = pygame_menu.Menu('Rainbow Snake', WIDTH, HEIGHT, theme = rainbow_theme,)
+        menu.add.button('Play', PlayGame, font_color = colors_array[0%len(colors_array)])
+        menu.add.button('High Scores', DisplayHighScores, font_color = colors_array[1%len(colors_array)])
+        menu.add.button('Help', font_color = colors_array[2%len(colors_array)])
+        # menu.add.button('Settings', settings_menu, font_color = colors_array[3%len(colors_array)])
+        menu.add.button('About', font_color = colors_array[4%len(colors_array)])
+        menu.add.button('Quit', pygame_menu.events.EXIT, font_color = colors_array[5%len(colors_array)])
 
 
         menu.mainloop(window)
