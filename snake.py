@@ -506,11 +506,14 @@ with open('traceback template.txt', 'w+') as f:
         pygame.init()
         player = Snake()
 
-        # Create window and define cclock
+        # Create window and define clock
         window = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption(title + "-" + version)
-        clock = pygame.time.Clock()
+        #icon_path = resource_path("assets/snake_screenshot_1.png")
+        #icon = pygame.image.load(icon_path)
+        #pygame.display.set_icon(icon)
 
+        clock = pygame.time.Clock()
         
 
         # GAME LOOP
@@ -530,8 +533,8 @@ with open('traceback template.txt', 'w+') as f:
                         case pygame.KEYDOWN:
                             match event.key:
                                 case pygame.K_SPACE:
-                                    paused = True
-                                    pause_menu.mainloop(window)
+                                    paused = not paused
+                                    #pause_menu.mainloop(window)
                                 case pygame.K_UP:
                                     if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
                                         player.current_direction = event.key
