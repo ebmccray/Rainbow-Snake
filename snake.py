@@ -84,7 +84,7 @@ with open('traceback template.txt', 'w+') as f:
         initial_speed = FPS/2
 
         colors_array = rainbow_array
-        selection_effect = pygame_menu.widgets.LeftArrowSelection().copy()
+        selection_effect = pygame_menu.widgets.LeftArrowSelection().copy().set_background_color(WHITE).set_color(BLACK)
         selection_effect_1 = selection_effect.copy().set_background_color(colors_array[0%len(colors_array)]).set_color(colors_array[0%len(colors_array)])
         selection_effect_2 = selection_effect.copy().set_background_color(colors_array[1%len(colors_array)]).set_color(colors_array[1%len(colors_array)])
         selection_effect_3 = selection_effect.copy().set_background_color(colors_array[2%len(colors_array)]).set_color(colors_array[2%len(colors_array)])
@@ -107,7 +107,7 @@ with open('traceback template.txt', 'w+') as f:
 
         rainbow_theme = pygame_menu.themes.THEME_DARK.copy()
         rainbow_theme.background_color=DARK_GREY
-        rainbow_theme.selection_color = DARK_GREY
+        rainbow_theme.selection_color = BLACK
         rainbow_theme.widget_font_color = DARK_GREY
         rainbow_theme.widget_selection_effect = selection_effect
 
@@ -327,9 +327,13 @@ with open('traceback template.txt', 'w+') as f:
             for menu in menu_list:
                 my_widgets = menu.get_widgets()
                 for id, widget in enumerate(my_widgets):
-                    widget_color = widget.get_font_info()['color']
                     widget.update_font(style = {"color":colors_array[id%len(colors_array)]})
-                    widget.set_selection_effect(selection_dict[id%len(selection_dict)])
+
+                    if colors_array[id%len(colors_array)] == BLACK:
+                        widget.set_selection_effect(selection_effect)
+                    else:                    
+                        widget.set_selection_effect(selection_dict[id%len(selection_dict)])
+                    
 
 
         def SetDifficulty(value, *args, **kwargs):
@@ -486,7 +490,7 @@ with open('traceback template.txt', 'w+') as f:
             game_over_menu.add.button("Quit", pygame_menu.events.EXIT, font_color = colors_array[4%len(colors_array)]).set_selection_effect(selection_effect_5)
 
             
-            name_box = add_score_menu.add.text_input("Username: ", default=player.name, font_color = colors_array[0%len(colors_array)])
+            name_box = add_score_menu.add.text_input(title = "Username: ", default="Player", font_color = colors_array[0%len(colors_array)])
             add_score_menu.add.label("Score: %s"%score, font_color = colors_array[1%len(colors_array)])
             choice_frame = add_score_menu.add.frame_h(WIDTH, HEIGHT/2)
             choice_frame.pack(
@@ -533,8 +537,8 @@ with open('traceback template.txt', 'w+') as f:
                         case pygame.KEYDOWN:
                             match event.key:
                                 case pygame.K_SPACE:
-                                    paused = not paused
-                                    #pause_menu.mainloop(window)
+                                    paused = True
+                                    pause_menu.mainloop(window)
                                 case pygame.K_UP:
                                     if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
                                         player.current_direction = event.key
