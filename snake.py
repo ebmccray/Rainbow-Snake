@@ -11,8 +11,14 @@ import random
 import traceback
 import os
 import sys
+import platform
 
-with open('traceback template.txt', 'w+') as f:
+python_version = platform.python_version()
+pygame_version = pygame.version.ver
+pygame_menu_version = "4.2.8"
+
+
+with open('traceback.txt', 'w+') as f:
 
     try:
         # DISTRIBUTION
@@ -33,10 +39,11 @@ with open('traceback template.txt', 'w+') as f:
 
         # COLORS:
         BLACK = (0, 0, 0)
-        DARK_GREY = (50,50,50)
+        BG_GRAY = (60,60,60)
+        DARK_GRAY = (50,50,50)
         GREY=(150,150,150)
         WHITE = (255, 255, 255)
-        BROWN = (125,55,0)
+        BROWN = (168, 85, 22)
         RED = (204,0,0)
         ORANGE = (230,145,56)
         YELLOW = (255,217,102)
@@ -45,8 +52,8 @@ with open('traceback template.txt', 'w+') as f:
         DARK_GREEN =(74,129,35)
         LIGHT_BLUE = (3,194,252)
         BLUE = (61,133,198)
-        INDIGO=(55,61,174)
-        PURPLE = (103,78,167)
+        INDIGO=(72, 80, 219)
+        PURPLE = (144, 79, 247)
         LAVENDER = (180,124,220)
         PINK = (242,78,175)
 
@@ -106,9 +113,9 @@ with open('traceback template.txt', 'w+') as f:
             }
 
         rainbow_theme = pygame_menu.themes.THEME_DARK.copy()
-        rainbow_theme.background_color=DARK_GREY
+        rainbow_theme.background_color=BG_GRAY
         rainbow_theme.selection_color = BLACK
-        rainbow_theme.widget_font_color = DARK_GREY
+        rainbow_theme.widget_font_color = BG_GRAY
         rainbow_theme.widget_selection_effect = selection_effect
 
         difficulty = 10
@@ -116,6 +123,15 @@ with open('traceback template.txt', 'w+') as f:
 
         running = True
         paused = False
+
+        # KEYBINDINGS
+        left = ["left", pygame.K_LEFT, pygame.K_a]
+        right = ["right", pygame.K_RIGHT, pygame.K_d]
+        up = ["up",pygame.K_UP, pygame.K_w]
+        down = ["down",pygame.K_DOWN, pygame.K_s]
+        pause_button = ["pause_button",pygame.K_SPACE]
+        accept = ["accept",pygame.K_RETURN]
+        keybindings = [up, down, left, right, pause_button, accept]
 
         # GROUPS AND ARRAYS
         all_sprites = pygame.sprite.Group()
@@ -147,7 +163,7 @@ with open('traceback template.txt', 'w+') as f:
                 self.rect = self.image.get_rect(topleft = ((grid_size*self.x_tile)+1, (grid_size*self.y_tile)+1))
 
                 self.snake_length = 0
-                self.current_direction = pygame.K_RIGHT
+                self.current_direction = "right"
 
             def update(self):
                 self.prev_x_tile = self.x_tile
@@ -159,13 +175,13 @@ with open('traceback template.txt', 'w+') as f:
                 else: 
                     if self.timer_current <= 0:
                         match self.current_direction:
-                            case pygame.K_UP:
+                            case "up":
                                 self.y_tile -= 1
-                            case pygame.K_DOWN:
+                            case "down":
                                 self.y_tile += 1
-                            case pygame.K_LEFT:
+                            case "left":
                                 self.x_tile -= 1
-                            case pygame.K_RIGHT:
+                            case "right":
                                 self.x_tile += 1
 
                         if self.x_tile < 0 or self.x_tile > max_x_tile or self.y_tile < 0 or self.y_tile > max_y_tile:
@@ -285,7 +301,7 @@ with open('traceback template.txt', 'w+') as f:
         # FUNCTIONS
         # General Game Functions:
         def DrawGame():
-            window.fill((DARK_GREY))
+            window.fill((BG_GRAY))
             all_sprites.draw(window)
             pygame.display.update()
 
@@ -332,7 +348,7 @@ with open('traceback template.txt', 'w+') as f:
                     if colors_array[id%len(colors_array)] == BLACK:
                         widget.set_selection_effect(selection_effect)
                     else:                    
-                        widget.set_selection_effect(selection_dict[id%len(selection_dict)])
+                        widget.set_selection_effect(selection_dict[id%7])
                     
 
 
@@ -344,6 +360,27 @@ with open('traceback template.txt', 'w+') as f:
         def SetImmortality(value, *args, **kwargs):
             global immortal
             immortal = value
+
+        def SetKeybindings(up, down, left, right, pause, accept, *args, **kwargs):
+            new_keynames = [up.get_value(),
+            down.get_value(),
+            left.get_value(),
+            right.get_value(),
+            pause.get_value(),
+            accept.get_value()]
+
+            new_keycodes = []
+
+            for keyname in new_keynames:
+                new_keycode = pygame.key.key_code(keyname)
+                new_keycodes.append(new_keycode)
+
+            for id, keycode in enumerate(new_keycodes):
+                if keycode in keybindings[id]:
+                    pass
+                else:
+                    keybindings[id][1] = keycode
+
 
         def NewTarget():
             target_x = (random.randint(0,max_x_tile)*grid_size)+2
@@ -535,22 +572,30 @@ with open('traceback template.txt', 'w+') as f:
                         case pygame.QUIT:
                             running = False
                         case pygame.KEYDOWN:
-                            match event.key:
-                                case pygame.K_SPACE:
+                            key_type = "none"
+
+                            for x in keybindings:
+                                if event.key in x:
+                                    key_type = x[0]
+
+                            match key_type:
+                                case "pause_button":
                                     paused = True
                                     pause_menu.mainloop(window)
-                                case pygame.K_UP:
-                                    if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
-                                        player.current_direction = event.key
-                                case pygame.K_DOWN:
-                                    if player.current_direction == pygame.K_LEFT or player.current_direction == pygame.K_RIGHT or player.snake_length == 0:
-                                        player.current_direction = event.key
-                                case pygame.K_RIGHT:
-                                    if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN or player.snake_length == 0:
-                                        player.current_direction = event.key
-                                case pygame.K_LEFT:
-                                    if player.current_direction == pygame.K_UP or player.current_direction == pygame.K_DOWN or player.snake_length == 0:
-                                        player.current_direction = event.key
+                                case "up":
+                                    if player.current_direction == "left" or player.current_direction == "right" or player.snake_length == 0:
+                                        player.current_direction = key_type
+                                case "down":
+                                    if player.current_direction == "left" or player.current_direction == "right" or player.snake_length == 0:
+                                        player.current_direction = key_type
+                                case "right":
+                                    if player.current_direction == "up" or player.current_direction == "down" or player.snake_length == 0:
+                                        player.current_direction = key_type
+                                case "left":
+                                    if player.current_direction == "up" or player.current_direction == "down" or player.snake_length == 0:
+                                        player.current_direction = key_type
+                                case _:
+                                    pass
 
                 # While not paused, run simulation
                 if not paused:
@@ -563,20 +608,48 @@ with open('traceback template.txt', 'w+') as f:
 
 
         # MENU CONFIGURATION
+        '''keybindings_menu = pygame_menu.Menu('Settings', WIDTH, HEIGHT, theme = rainbow_theme,)
+        keybindings_menu.add.label("For each input, type the name of the key you wish to assign.", max_char=-1)
+        keybindings_menu.add.label('For example, if you want an entry to be the return key, type "return"', max_char=-1, font_size = 15)
+        up_choice = keybindings_menu.add.text_input("Up: ", default="up")
+        down_choice = keybindings_menu.add.text_input("Down: ", default="down")
+        left_choice = keybindings_menu.add.text_input("Left: ",default="left")
+        right_choice = keybindings_menu.add.text_input("Right: ", default="right")
+        pause_choice = keybindings_menu.add.text_input("Pause: ", default="space")
+        accept_choice = keybindings_menu.add.text_input("Accept: ", default="return")
+
+        choice_frame = keybindings_menu.add.frame_h(WIDTH, 100)
+        choice_frame.pack(
+            keybindings_menu.add.button("Okay", SetKeybindings, up_choice, down_choice, left_choice, right_choice, pause_choice, accept_choice, font_color = colors_array[2%len(colors_array)]).set_selection_effect(selection_effect_3),
+            align=pygame_menu.locals.ALIGN_LEFT, margin=(2, 2)
+        )
+        choice_frame.pack(
+            keybindings_menu.add.button("Back", pygame_menu.events.BACK, font_color = colors_array[3%len(colors_array)]).set_selection_effect(selection_effect_4),
+            align=pygame_menu.locals.ALIGN_RIGHT, margin=(2, 2)
+        )'''
+
+        
         settings_menu = pygame_menu.Menu('Settings', WIDTH, HEIGHT, theme = rainbow_theme,)
         color_selector = settings_menu.add.selector("Colors:\t",items = color_choice_list, onchange=SetColors, onreturn=SetColors, font_color = colors_array[0%len(colors_array)]).set_selection_effect(selection_effect_1)
         difficulty_selector = settings_menu.add.selector("Difficulty:\t", items=[("Medium",10), ("Hard", FPS), ("Easy", 5)], onchange=SetDifficulty, onreturn=SetDifficulty, font_color = colors_array[1%len(colors_array)]).set_selection_effect(selection_effect_2)
         settings_menu.add.label("Changes the maximum speed at which the snake travels.", max_char=-1, font_size = 15)
         settings_menu.add.toggle_switch("Immortality:\t", default=False, onchange=SetImmortality, state_text=("Off", "On"), state_values=(False, True), font_color = colors_array[2%len(colors_array)]).set_selection_effect(selection_effect_3)
         settings_menu.add.label("With this setting on, you literally can't die.", max_char=-1, font_size = 15)
+        #settings_menu.add.button("Change Keybindings", keybindings_menu)
         settings_menu.add.button("Back",pygame_menu.events.BACK, font_color = colors_array[3%len(colors_array)]).set_selection_effect(selection_effect_4)
-        
 
+        more_info_menu = pygame_menu.Menu("About", WIDTH, HEIGHT, theme = rainbow_theme,)
+        more_info_menu.add.label("Python %s"%python_version, font_size =  20)
+        more_info_menu.add.label("Pygame %s"%pygame_version, font_size =  20)
+        more_info_menu.add.label("Pygame-Menu %s"%pygame_menu_version, font_size =  20)
+        more_info_menu.add.button("Back",pygame_menu.events.BACK, font_color = colors_array[4%len(colors_array)]).set_selection_effect(selection_effect_5)
+        
         about_menu = pygame_menu.Menu("About", WIDTH, HEIGHT, theme = rainbow_theme,)
-        about_menu.add.label("Copyright 2022 Erienne McCray", max_char=-1, font_color = colors_array[0%len(colors_array)], font_size =  20)
+        about_menu.add.label("Copyright %s %s"%(copyright, creator), max_char=-1, font_color = colors_array[0%len(colors_array)], font_size =  20)
         about_menu.add.label("Rainbow Snake was created in June of 2022 \nin celebration of Pride month, \nand distributed for free.", max_char=-1, font_color = colors_array[1%len(colors_array)], font_size =  20)
         about_menu.add.label("All proceeds from this game will be donated to Out & Equal, an LGBTQ+ charity that advocates for LGBTQ+ people to express their authentic identities in their workplaces.", max_char=-1, font_color = colors_array[2%len(colors_array)], font_size =  20)
         about_menu.add.label("Thank you for playing!",max_char=-1, font_color = colors_array[3%len(colors_array)], font_size =  25)
+        about_menu.add.button("More Info", more_info_menu)
         about_menu.add.button("Back",pygame_menu.events.BACK, font_color = colors_array[4%len(colors_array)]).set_selection_effect(selection_effect_5)
 
 
